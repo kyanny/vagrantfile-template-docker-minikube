@@ -1,0 +1,28 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "<%= box_name %>"
+  <% if box_version -%>
+  config.vm.box_version = "<%= box_version %>"
+  <% end -%>
+  <% if box_url -%>
+  config.vm.box_url = "<%= box_url %>"
+  <% end -%>
+  config.vm.provision "docker" do |d|
+  end
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+    docker run hello-world
+
+    echo "== Installing minikute =="
+    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    sudo install minikube-linux-amd64 /usr/local/bin/minikube
+    minikube start
+    minikube kubectl -- get po -A
+    sudo ln -s $(which minikube) /usr/local/bin/kubectl
+    kubectl get pods -A
+
+    echo "== Installing Helm =="
+    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    chmod 700 get_helm.sh
+    ./get_helm.sh
+    helm
+  SHELL
+end
